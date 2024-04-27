@@ -1,0 +1,59 @@
+import React from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+
+export default function DeconnecterScreen() {
+  const navigation = useNavigation();
+
+  const handleConfirmLogout = () => {
+    // Ici, vous pouvez mettre la logique pour déconnecter l'utilisateur
+    // Par exemple, nettoyer le stockage local, effacer les jetons d'authentification, etc.
+    // Après la déconnexion réussie, vous pouvez naviguer vers la page de connexion ou d'accueil
+    navigation.navigate('HomeScreen'); // ou remplacez 'HomeScreen' par le nom de votre page d'accueil
+  };
+
+  const handleCancel = () => {
+    // Si l'utilisateur annule la déconnexion, il est ramené à l'écran précédent (dans ce cas, l'écran d'accueil)
+    navigation.goBack();
+  };
+
+  return (
+    <View style={styles.container}>
+      <Text>Are you sure you want to logout?</Text>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.button} onPress={handleConfirmLogout}>
+          <Text style={styles.buttonText}>Confirm</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.button, styles.cancelButton]} onPress={handleCancel}>
+          <Text style={styles.buttonText}>Cancel</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    marginTop: 20,
+  },
+  button: {
+    backgroundColor: 'blue',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    marginRight: 10,
+  },
+  cancelButton: {
+    backgroundColor: 'red',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+  },
+});
