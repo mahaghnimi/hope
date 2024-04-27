@@ -1,25 +1,25 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, ImageBackground } from 'react-native';
+import { FIREBASE_AUTH } from '../../firebaseConfig';
 
 
 export default function AuthentifScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+const auth= FIREBASE_AUTH
 
-  const handleLogin = () => {
-    if (!isValidEmail(email)) {
-      setError('Adresse email invalide');
-      return;
+  const handleLogin = async () => {
+    console.log("test")
+    try {
+      const userCredential = await auth.signInWithEmailAndPassword(email, password);
+      const user = userCredential.user;
+      navigation.navigate('HomeScreen');
+    } catch (error) {
+      const errorCode = error.code;
+      const errorMessage = error.message;
+      console.log('errorCode', errorCode);
+      console.log('errorMessage', errorMessage);
     }
-
-    if (!isValidPassword(password)) {
-      setError('Le mot de passe doit comporter au moins 8 caractères et contenir à la fois des lettres et des chiffres');
-      return;
-    }
-
-    // Votre logique de connexion ici
-    navigation.navigate('HomeScreen');
   };
 
   const isValidEmail = (email) => {

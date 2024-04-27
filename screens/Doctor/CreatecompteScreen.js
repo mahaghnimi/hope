@@ -127,7 +127,7 @@ const signUp = async ()=>{
             value={isPatient}
             onValueChange={setIsPatient}
             />
-            <Text>En tant que patient?</Text>
+            <Text>En tant que 5?</Text>
             </View>
             
 

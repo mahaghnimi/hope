@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 export default function HomeScreen({ navigation }) {
   const [isMenuVisible, setMenuVisible] = useState(false);
+  console.log("patient screen")
 
   const toggleMenu = () => {
     setMenuVisible(!isMenuVisible);

@@ -1,29 +1,51 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, ImageBackground, Alert } from 'react-native';
 import { collection, getDocs, where, query } from "firebase/firestore";
-import { db } from '../../firebaseConfig';
+import { db, FIREBASE_AUTH } from '../../firebaseConfig';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 export default function AuthentifScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const auth = FIREBASE_AUTH
 
 
 
- const fetchData = async ()=>{
-  const q =   query(collection(db, "users"), where("email", "==", "Patha1@gmail.com"		));
-    const querySnapshot = await getDocs(q);
-    querySnapshot.forEach((doc) => {
-      // doc.data() is never undefined for query doc snapshots
-      console.log(doc.id, " => ", doc.data());
-    });
-  }
-  console.log('test')
 
+  const handleLogin = async () => {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
+      const usersRef = collection(db, "users");
+      const q = query(usersRef, where("email", "==", email));
 
-  const handleLogin = () => {
-    fetchData()
- };
+      const querySnapshot = await getDocs(q);
+
+      querySnapshot.forEach((doc) => {
+        console.log(doc.id, " => ", doc.data());
+        const userRole = doc.data().role;
+        if (userRole) {
+          if (userRole === 'Doctor') {
+            setEmail('');
+            setPassword('');
+            navigation.navigate('MedHomeScreen');
+          } else if (userRole === 'Patient') {
+            setEmail('');
+            setPassword('');
+            navigation.navigate('HomeScreen');
+          } else {
+            console.log('Invalid user role');
+          }
+        } else {
+          console.log('User not found');
+        }
+      })
+
+    } catch (error) {
+      console.log(error)
+    }
+  };
 
   const isValidEmail = (email) => {
     return /\S+@\S+\.\S+/.test(email);

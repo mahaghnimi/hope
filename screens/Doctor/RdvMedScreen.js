@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity, FlatList, TextInput, Button } from 'react-native';
 import Header from './Header';
 import Footer from './Footer'; 
+import { FIREBASE_AUTH, db } from '../../firebaseConfig';
+import { addDoc, collection } from 'firebase/firestore';
 
 export default function RdvMedScreen({ navigation }) {
 
@@ -9,6 +11,7 @@ export default function RdvMedScreen({ navigation }) {
   const [dateInput, setDateInput] = useState('');
   const [slots, setSlots] = useState({});
   const [slotInput, setSlotInput] = useState('');
+  const auth = FIREBASE_AUTH;
 
   const addDate = () => {
     if (dateInput.trim() !== '') {
@@ -20,29 +23,45 @@ export default function RdvMedScreen({ navigation }) {
 
   const addSlot = (date) => {
     if (slotInput.trim() !== '') {
-      if (slots[date].length < 3) { 
-        const updatedSlots = { ...slots, [date]: [...slots[date], slotInput] };
-        setSlots(updatedSlots);
+      if (slots[date]) {
+        if (slots[date].length < 3) {
+          const updatedSlots = { ...slots, [date]: [...slots[date], slotInput] };
+          setSlots(updatedSlots);
+        } else {
+          alert("The maximum number of time slots for this date has already been reached.");
+        }
       } else {
-        alert("The maximum number of time slots for this date has already been reached.");
+        const updatedSlots = { ...slots, [date]: [slotInput] };
+        setSlots(updatedSlots);
       }
       setSlotInput('');
     }
   };
-
+  
   const removeSlot = (date, slot) => {
-    const updatedSlots = { ...slots, [date]: slots[date].filter((s) => s !== slot) };
-    setSlots(updatedSlots);
+    if (slots[date]) {
+      const updatedSlots = { ...slots, [date]: slots[date].filter((s) => s !== slot) };
+      setSlots(updatedSlots);
+    }
   };
-
-  const removeDate = (date) => {
-    const { [date]: _, ...updatedSlots } = slots;
-    setSlots(updatedSlots);
-    setDates(dates.filter((d) => d !== date));
-  };
-
-  const handleConfirm = () => {
-    // Perform confirmation actions here
+  
+  const handleConfirm = async () => {
+    try {
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        await addDoc(collection(db, 'appointments'), {
+          doctor: currentUser.email,
+          dates: dates.map((date) => ({
+            date,
+            slots: slots[date] ? slots[date] : [],
+          })),
+        });
+      } else {
+        console.log('No user is currently signed in.');
+      }
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (

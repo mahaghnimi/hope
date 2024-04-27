@@ -1,19 +1,22 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { signOut } from 'firebase/auth';
 
 export default function DeconnecterScreen() {
   const navigation = useNavigation();
 
-  const handleConfirmLogout = () => {
-    // Ici, vous pouvez mettre la logique pour déconnecter l'utilisateur
-    // Par exemple, nettoyer le stockage local, effacer les jetons d'authentification, etc.
-    // Après la déconnexion réussie, vous pouvez naviguer vers la page de connexion ou d'accueil
-    navigation.navigate('HomeScreen'); // ou remplacez 'HomeScreen' par le nom de votre page d'accueil
+  const handleConfirmLogout =async () => {
+    try{
+      await signOut(auth);
+      navigation.navigate('AuthentifScreen');
+    } catch (error) {
+      console.log('errorCode', errorCode);
+      console.log('errorMessage', errorMessage);
+    }
   };
 
   const handleCancel = () => {
-    // Si l'utilisateur annule la déconnexion, il est ramené à l'écran précédent (dans ce cas, l'écran d'accueil)
     navigation.goBack();
   };
 

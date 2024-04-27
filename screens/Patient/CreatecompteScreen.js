@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ImageBackground, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { FIREBASE_AUTH, db } from '../../firebaseConfig';
 import Checkbox from 'expo-checkbox';
-import { addDoc, collection, doc, setDoc } from "firebase/firestore";
+import { addDoc, collection  } from "firebase/firestore";
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 
 
@@ -20,29 +20,33 @@ export default function CreatecompteScreen({ navigation }) {
   
   
   const signUp = async () => {
-    if(isDoctor){
-      setRole('Doctor')
-    }else setRole('Patient')
-    if (role !== ''){
-       console.log('role', role, 'email', email)
-       try {
-         const res = await createUserWithEmailAndPassword(auth, email, password)
-           .then(() => {
-             addDoc(collection(db, 'users  '), {
-               email: email,
-               role: role
-             }).finally(
+    let userRole = '';
+    if (isDoctor) {
+      userRole = 'Doctor';
+    } else if (isPatient) {
+      userRole = 'Patient';
+    }
+  
+    if (userRole !== '') {
+      console.log('role', userRole, 'email', email);
+      try {
+        const res = await createUserWithEmailAndPassword(auth, email, password)
+          .then(() => {
+            addDoc(collection(db, 'users'), {
+              email: email,
+              role: userRole
+            }).finally(
               Alert.alert('Compte ajoutée')
-             )
-           })
-       }
-       catch (e) {
-         console.log(e)
-         Alert.alert(e.toString())
-       }
-     } else{
+            )
+          })
+      }
+      catch (e) {
+        console.log(e)
+        Alert.alert(e.toString())
+      }
+    } else {
       Alert.alert('Vous devez selectionner un role')
-     }
+    }
   }
 
   const handleConfirmation = () => {
