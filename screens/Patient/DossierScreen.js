@@ -1,20 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, Image, TouchableOpacity, Button, StyleSheet, ImageBackground } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../../firebaseConfig';
+import {  FIREBASE_AUTH } from '../../firebaseConfig';
 import Header from './Header';
 import Footer from './Footer';
 
 export default function DossierScreen({ navigation }) {
+  const auth = FIREBASE_AUTH
   const [selectedImage, setSelectedImage] = useState(null);
   const [symptoms, setSymptoms] = useState([
-    { id: 1, name: 'Avez-vous remarqué une bosse dans votre sein ou sous votre bras ?', selected: false },
-    { id: 2, name: 'Ressentez-vous une douleur persistante dans votre sein ?', selected: false },
-    { id: 3, name: 'Éprouvez-vous un gonflement, une rougeur dans votre sein ?', selected: false },
-    { id: 4, name: 'Avez-vous remarqué un changement dans la taille ou la forme de votre sein ?', selected: false },
-    { id: 5, name: 'Avez-vous observé un écoulement du mamelon autre que le lait maternel ?', selected: false },
-    { id: 6, name: 'Avez-vous eu une perte de poids inexpliquée ?', selected: false },
+    { id: 1, name: 'Une bosse dans votre sein ou sous votre bras pourrait être remarquée.', selected: false },
+    { id: 2, name: 'Une douleur persistante dans votre sein pourrait être remarquée.', selected: false },
+    { id: 3, name: 'Un gonflement ou une rougeur dans votre sein pourrait aussi être remarqué.', selected: false },
+    { id: 4, name: 'Un changement dans la taille ou la forme de votre sein pourrait être noté.', selected: false },
+    { id: 5, name: 'Un écoulement du mamelon autre que le lait maternel pourrait également être remarqué.', selected: false },
+    { id: 6, name: 'Une perte de poids inexpliquée pourrait aussi être remarquée.', selected: false },
   ]);
-  const patientId = '1';
+  const [patientName, setPatientName] = useState('');
+  useEffect(() => {
+    const fetchUserEmail = async () => {
+      try {
+        if (auth) {
+          const user = auth.currentUser;
+          if (user) {
+            setPatientName(user.email);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user email:', error);
+      }
+    };
+  
+    fetchUserEmail();
+  }, []);
+  
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -29,11 +50,24 @@ export default function DossierScreen({ navigation }) {
     }
   };
 
-  const saveImage = () => {
-    if (selectedImage) {
-      alert('Image enregistrée avec succès !');
-    } else {
-      alert('Aucune image sélectionnée.');
+  const saveImage = async () => {
+    try {
+      if (selectedImage) {
+        const docRef = await addDoc(collection(db, 'images'), {
+          imageUri: selectedImage,
+          createdAt: serverTimestamp()
+        });
+        console.log('Image saved successfully:', docRef.id);
+
+        await saveSymptoms();
+
+        alert('Image enregistrée avec succès !');
+      } else {
+        alert('Aucune image sélectionnée.');
+      }
+    } catch (error) {
+      console.error('Error saving image:', error);
+      alert('Erreur lors de l\'enregistrement de l\'image. Veuillez réessayer plus tard.');
     }
   };
 
@@ -48,10 +82,27 @@ export default function DossierScreen({ navigation }) {
     setSymptoms(updatedSymptoms);
   };
 
+  const saveSymptoms = async () => {
+    try {
+      const selectedSymptoms = symptoms.filter(symptom => symptom.selected);
+      const docRef = await addDoc(collection(db, 'symptoms'), {
+        patientName: patientName,
+        email: auth.currentUser.email,
+        symptoms: selectedSymptoms.map(symptom => symptom.name),
+        createdAt: serverTimestamp()
+      });
+      console.log('Symptoms saved successfully:', docRef.id);
+      alert('Symptômes enregistrés avec succès !');
+    } catch (error) {
+      console.error('Error saving symptoms:', error);
+      alert('Erreur lors de l\'enregistrement des symptômes. Veuillez réessayer plus tard.');
+    }
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Header />
-      <Text style={styles.headerText}>Bienvenue Madame (ID Patient: {patientId})</Text>
+      <Text style={styles.headerText}>Bienvenue Madame {patientName}</Text>
       {selectedImage && <Image source={{ uri: selectedImage }} style={styles.image} />}
       <TouchableOpacity onPress={pickImage} style={styles.imageButton}>
         <ImageBackground source={require('../../assets/images/galerie.png')} style={styles.buttonBackground}>
@@ -72,7 +123,7 @@ export default function DossierScreen({ navigation }) {
         ))}
       </View>
       <View style={styles.buttonContainer}>
-        <Button title="Ajouter" onPress={() => {}} color='#FF1493' />
+        <Button title="Ajouter" onPress={saveSymptoms} color='#FF1493' />
       </View>
       <View style={styles.footerContainer}>
         <Footer />
@@ -86,7 +137,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingBottom: 100, // Add paddingBottom to create space for the footer
+    paddingBottom: 100,
     backgroundColor: 'rgba(255, 192, 203, 0.5)',
   },
   headerText: {
@@ -105,7 +156,7 @@ const styles = StyleSheet.create({
   imageButton: {
     width: 200,
     height: 150,
-    marginBottom: 20, // Increase marginBottom for spacing
+    marginBottom: 20,
     alignItems: 'center',
     justifyContent: 'flex-end',
   },
@@ -149,13 +200,13 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    marginVertical: 10, // Use marginVertical for top and bottom margin
+    marginVertical: 10,
     backgroundColor: '#FFC0CB',
-    elevation: 8, // Add elevation for shadow
-    shadowColor: '#C71585', // Set shadow color same as card text color
-    shadowOpacity: 0.5, // Adjust opacity as needed
-    shadowRadius: 5, // Adjust shadow radius as needed
-    shadowOffset: { width: 0, height: 2 }, // Adjust shadow offset as needed
+    elevation: 8,
+    shadowColor: '#C71585',
+    shadowOpacity: 0.5,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 2 },
   },
   cardText: {
     fontSize: 15,
@@ -166,8 +217,8 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: 20, // Increase marginBottom for spacing
-    width: '100%', // Set width to 100% to center the button
+    marginBottom: 20,
+    width: '100%',
   },
   footerContainer: {
     position: 'absolute',

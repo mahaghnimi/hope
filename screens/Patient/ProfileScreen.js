@@ -1,102 +1,116 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ImageBackground, Image, TextInput, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ImageBackground, TextInput, Alert } from 'react-native';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../../firebaseConfig';
+import Header from './Header';
+import Footer from './Footer';
 
-import Header from './Header'; // Importez le composant Header
-import Footer from './Footer'; // Importez le composant Footer
-
-export default function Profilescreen({ navigation }) {  const [nom, setNom] = useState('');
+export default function Profilescreen({ navigation }) {
+  const [nom, setNom] = useState('');
   const [prenom, setPrenom] = useState('');
   const [dateNaissance, setDateNaissance] = useState('');
   const [email, setEmail] = useState('');
   const [adresse, setAdresse] = useState('');
   const [numeroTelephone, setNumeroTelephone] = useState('');
 
-
   // Fonction pour ajouter le profil avec les données remplies
-  const handleAjouter = () => {
-    // Implémentez la logique ici
+  const handleAjouter = async () => {
+    try {
+      // Save the patient's profile data to Firebase
+      const docRef = await addDoc(collection(db, 'profiles'), {
+        nom,
+        prenom,
+        dateNaissance,
+        email,
+        adresse,
+        numeroTelephone,
+        createdAt: serverTimestamp()
+      });
+
+      console.log('Profil ajouté avec succès:', docRef.id);
+      Alert.alert('Profil ajouté avec succès!');
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout du profil:', error);
+      Alert.alert('Erreur lors de l\'ajout du profil. Veuillez réessayer plus tard.');
+    }
   };
 
   // Fonction pour insérer le dossier médical
   const handleInsererDossierMedical = () => {
-    // Implémentez la logique ici
+    navigation.navigate('DossierScreen');
   };
 
   return (
     <ImageBackground source={require('../../assets/images/profil.jpeg')} style={[styles.container, { opacity: 0.9 }]}>
-      <Header /> 
-      <View style={styles.imageContainer}>
-
-      
-      </View>
-      <View style={styles.form}>
-        <View style={styles.formField}>
-          <Text style={styles.label}>Nom:</Text>
-          <TextInput
-            style={styles.input}
-            onChangeText={setNom}
-            value={nom}
-            placeholder="Entrez votre nom"
-          />
-        </View>
+      <Header />
+      <View style={styles.content}>
         <View style={styles.form}>
-  <View style={styles.formField}>
-    <Text style={styles.label}>Prénom:</Text>
-    <TextInput
-      style={styles.input}
-      onChangeText={setPrenom}
-      value={prenom}
-      placeholder="Entrez votre prénom"
-    />
-  </View>
-  <View style={styles.formField}>
-    <Text style={styles.label}>Date de Naissance:</Text>
-    <TextInput
-      style={styles.input}
-      onChangeText={setDateNaissance}
-      value={dateNaissance}
-      placeholder="Entrez votre date de naissance"
-    />
-  </View>
-  <View style={styles.formField}>
-    <Text style={styles.label}>Email:</Text>
-    <TextInput
-      style={styles.input}
-      onChangeText={setEmail}
-      value={email}
-      placeholder="Entrez votre adresse email"
-    />
-  </View>
-  <View style={styles.formField}>
-    <Text style={styles.label}>Adresse:</Text>
-    <TextInput
-      style={styles.input}
-      onChangeText={setAdresse}
-      value={adresse}
-      placeholder="Entrez votre adresse"
-    />
-  </View>
-  <View style={styles.formField}>
-    <Text style={styles.label}>Numéro de Téléphone:</Text>
-    <TextInput
-      style={styles.input}
-      onChangeText={setNumeroTelephone}
-      value={numeroTelephone}
-      placeholder="Entrez votre numéro de téléphone"
-      keyboardType="numeric"
-    />
-  </View>
-
+          <View style={styles.formField}>
+            <Text style={styles.label}>Nom:</Text>
+            <TextInput
+              style={styles.input}
+              onChangeText={setNom}
+              value={nom}
+              placeholder="Entrez votre nom"
+            />
+          </View>
+          <View style={styles.formField}>
+            <Text style={styles.label}>Prénom:</Text>
+            <TextInput
+              style={styles.input}
+              onChangeText={setPrenom}
+              value={prenom}
+              placeholder="Entrez votre prénom"
+            />
+          </View>
+          <View style={styles.formField}>
+            <Text style={styles.label}>Date de Naissance:</Text>
+            <TextInput
+              style={styles.input}
+              onChangeText={setDateNaissance}
+              value={dateNaissance}
+              placeholder="Entrez votre date de naissance"
+            />
+          </View>
+          <View style={styles.formField}>
+            <Text style={styles.label}>Email:</Text>
+            <TextInput
+              style={styles.input}
+              onChangeText={setEmail}
+              value={email}
+              placeholder="Entrez votre adresse email"
+            />
+          </View>
+          <View style={styles.formField}>
+            <Text style={styles.label}>Adresse:</Text>
+            <TextInput
+              style={styles.input}
+              onChangeText={setAdresse}
+              value={adresse}
+              placeholder="Entrez votre adresse"
+            />
+          </View>
+          <View style={styles.formField}>
+            <Text style={styles.label}>Numéro de Téléphone:</Text>
+            <TextInput
+              style={styles.input}
+              onChangeText={setNumeroTelephone}
+              value={numeroTelephone}
+              placeholder="Entrez votre numéro de téléphone"
+              keyboardType="numeric"
+            />
+          </View>
         </View>
-        {/* Ajoutez les autres champs du formulaire de la même manière */}
+        <View style={styles.footer}>
+          <TouchableOpacity style={styles.button} onPress={handleAjouter}>
+            <Text style={styles.buttonText}>Ajouter le profil</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={handleInsererDossierMedical}>
+            <Text style={styles.buttonText}>Insérer votre dossier médical</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-      <View style={styles.footer}>
-      
-        <TouchableOpacity style={[styles.button, styles.secondButton]} onPress={handleInsererDossierMedical}>
-          <Text onPress={() => navigation.navigate('DossierScreen')} style={styles.buttonText}>Insérer votre dossier médical</Text>
-        </TouchableOpacity>
-      </View>
-      <Footer navigation={navigation} /> 
+      <Footer navigation={navigation} />
     </ImageBackground>
   );
 }
@@ -108,26 +122,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     // Specify the background image path here
   },
-  imageContainer: {
+  content: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  photo: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-  },
-  addPhotoButton: {
-    backgroundColor: '#FF69B4', // Rose
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 25,
-  },
-  buttonText: {
-    color: '#FFF', // Texte en blanc
-    fontSize: 16,
-    fontWeight: 'bold',
   },
   form: {
     paddingHorizontal: 20,
@@ -140,14 +138,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     marginBottom: 5,
-    color: '#FFFFFF', // Couleur du texte sur l'image
+    color: '#FFFFFF', // Text color on the image
   },
   input: {
     backgroundColor: '#FFF',
     borderRadius: 10,
-    paddingHorizontal: 15,
+    paddingHorizontal: 40,
     paddingVertical: 10,
-    
   },
   footer: {
     flexDirection: 'row',
@@ -155,12 +152,15 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
   button: {
-    backgroundColor: '#FF69B4', // Rose
+    backgroundColor: '#FF69B4', // Pink
     paddingVertical: 12,
-    paddingHorizontal: 15,
+    paddingHorizontal: 9,
     borderRadius: 20,
+    marginHorizontal: 6,
   },
-  secondButton: {
-    marginLeft: 10, // Ajustez la valeur selon l'espace souhaité entre les boutons
+  buttonText: {
+    color: '#FFF', // White text
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });

@@ -8,10 +8,6 @@ export default function AuthentifScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const auth = FIREBASE_AUTH
-
-
-
-
   const handleLogin = async () => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -34,7 +30,16 @@ export default function AuthentifScreen({ navigation }) {
             setEmail('');
             setPassword('');
             navigation.navigate('HomeScreen');
-          } else {
+          }else if (userRole === 'Patient') {
+            setEmail('');
+            setPassword('');
+            navigation.navigate('HomeScreen');
+          }else if (userRole === 'Admin') {
+            setEmail('');
+            setPassword('');
+            navigation.navigate('AdminhomeScreen');
+          }
+           else {
             console.log('Invalid user role');
           }
         } else {
@@ -47,13 +52,7 @@ export default function AuthentifScreen({ navigation }) {
     }
   };
 
-  const isValidEmail = (email) => {
-    return /\S+@\S+\.\S+/.test(email);
-  };
-
-  const isValidPassword = (password) => {
-    return password.length >= 8 && /[a-zA-Z]/.test(password) && /\d/.test(password);
-  };
+ 
 
   return (
     <ImageBackground source={require('../../assets/images/image2.webp')} style={styles.background}>
@@ -109,7 +108,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 10,
-    marginTop: 90 // Ajoutez marginTop ici pour l'espace entre l'image de fond et les champs de saisie
+    marginTop: 90 
   },
   card: {
     backgroundColor: 'rgba(255, 255, 255, 0.8)',
@@ -123,14 +122,14 @@ const styles = StyleSheet.create({
     height: 60,
     backgroundColor: 'pink',
     borderRadius: 30,
-    marginBottom: 20, // Espacement entre les champs de saisie
+    marginBottom: 20, 
     paddingVertical: 10,
     paddingHorizontal: 30,
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: 20, // Espacement entre les champs de saisie et les boutons
+    marginBottom: 20,
   },
   button: {
     backgroundColor: '#FF1493',
@@ -138,8 +137,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     marginRight: 10,
-    width: 120, // Largeur du bouton
-    height: 40, // Hauteur du bouton
+    width: 120, 
+    height: 40, 
 
   },
   buttonText: {
@@ -151,8 +150,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingVertical: 8,
     paddingHorizontal: 16,
-    width: 100, // Largeur du bouton
-    height: 40, // Hauteur du bouton
+    width: 100, 
+    height: 40, 
   },
   signupButtonText: {
     color: 'white',

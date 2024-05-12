@@ -12,9 +12,12 @@ export default function MedHomeScreen({ navigation }) {
 
   // Fonction pour naviguer vers la page ProfileScreen
   const handleMenuItemPress = (menuItem) => {
-    if (menuItem === 'Profil') {
+    if (menuItem === 'Profile') {
       navigation.navigate('MedProfilScreen');
-    } else if (menuItem === 'Paramètres') {
+    } else if (menuItem === 'Mon Profile') {
+      navigation.navigate('ProfileDetailScreen');
+    }
+     else if (menuItem === 'Paramètres') {
       navigation.navigate('DocparamScreen');
     } else if (menuItem === 'Déconnexion') {
       // Show alert before logging out
@@ -31,9 +34,10 @@ export default function MedHomeScreen({ navigation }) {
   };
 
   const menuOptions = [
-    { id: '1', name: 'Profil', icon: 'person' },
-    { id: '2', name: 'Paramètres', icon: 'settings' },
-    { id: '3', name: 'Déconnexion', icon: 'log-out' },
+    { id: '1', name: 'Profile', icon: 'person' },
+    { id: '2', name: 'Mon Profile', icon: 'person' },
+    { id: '3', name: 'Paramètres', icon: 'settings' },
+    { id: '4', name: 'Déconnexion', icon: 'log-out' },
   ];
 
   const Card = ({ onPress, text, imageSource }) => {

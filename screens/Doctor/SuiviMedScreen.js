@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, ImageBackground } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, ImageBackground, Alert } from 'react-native';
 import Header from './Header'; 
 import Footer from './Footer';
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '../../firebaseConfig';
 
 export default function SuiviMedScreen({ navigation }) {
 
@@ -9,20 +11,39 @@ export default function SuiviMedScreen({ navigation }) {
   const [totalPills, setTotalPills] = useState('');
   const [quantityPerDay, setQuantityPerDay] = useState('');
 
-  const handleAddMedication = () => {
-    // Envoyer les données de médicament à une API, une base de données, ou un autre service de sauvegarde
-    console.log('Nom du médicament:', medicationName);
-    console.log('Total de pilules:', totalPills);
-    console.log('Quantité par jour:', quantityPerDay);
+  const handleAddMedication = async () => {
+    // Vérifier si l'un des champs est vide
+    if (!medicationName || !totalPills || !quantityPerDay) {
+      Alert.alert('Erreur', 'Veuillez remplir tous les champs.');
+      return;
+    }
 
-    // Réinitialiser les champs après l'ajout du médicament
-    setMedicationName('');
-    setTotalPills('');
-    setQuantityPerDay('');
+    try {
+      const docRef = await addDoc(collection(db, 'medications'), {
+        medicationName: medicationName,
+        totalPills: parseInt(totalPills),
+        quantityPerDay: parseInt(quantityPerDay)
+      });
+
+      console.log('Document written with ID: ', docRef.id);
+
+      // Réinitialiser les champs après l'ajout du médicament
+      setMedicationName('');
+      setTotalPills('');
+      setQuantityPerDay('');
+
+      // Afficher un message de succès
+      Alert.alert('Succès', 'Le médicament a été ajouté avec succès.');
+    } catch (error) {
+      console.error('Error adding document: ', error);
+
+      // Afficher un message d'erreur
+      Alert.alert('Erreur', 'Une erreur s\'est produite lors de l\'ajout du médicament. Veuillez réessayer.');
+    }
   };
 
   return (
-    <ImageBackground source={require('../../assets/images/suivre.jpeg')} style={styles.background}>
+    <ImageBackground source={require('../../assets/images/suivree.png')} style={styles.background}>
       <Header />
       <View style={styles.container}>
         <Text style={styles.title}>Suivi médicaments</Text>

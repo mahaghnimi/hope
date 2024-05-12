@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, FlatList, TextInput, Button } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, FlatList, TextInput, Alert, Button } from 'react-native';
 import Header from './Header';
-import Footer from './Footer'; 
+import Footer from './Footer';
 import { FIREBASE_AUTH, db } from '../../firebaseConfig';
 import { addDoc, collection } from 'firebase/firestore';
 
@@ -37,14 +37,14 @@ export default function RdvMedScreen({ navigation }) {
       setSlotInput('');
     }
   };
-  
+
   const removeSlot = (date, slot) => {
     if (slots[date]) {
       const updatedSlots = { ...slots, [date]: slots[date].filter((s) => s !== slot) };
       setSlots(updatedSlots);
     }
   };
-  
+
   const handleConfirm = async () => {
     try {
       const currentUser = auth.currentUser;
@@ -56,6 +56,13 @@ export default function RdvMedScreen({ navigation }) {
             slots: slots[date] ? slots[date] : [],
           })),
         });
+        // Clear the state after saving to Firebase
+        setDates([]);
+        setSlots({});
+        setDateInput('');
+        setSlotInput('');
+        // Navigate to another screen or perform any other action upon successful save
+        // Example: navigation.navigate('NextScreen');
       } else {
         console.log('No user is currently signed in.');
       }
@@ -64,8 +71,12 @@ export default function RdvMedScreen({ navigation }) {
     }
   };
 
+
   return (
     <View style={styles.container}>
+      <TouchableOpacity onPress={() => navigation.navigate('MyAppointments')}>
+        <Text style={styles.mesRendezVous}>Mes rendez-vous</Text>
+      </TouchableOpacity>
       <Header style={styles.header} />
       <Text style={styles.title}>Gérer les rendez-vous</Text>
       <Text style={styles.addDateText}>Ajouter une date :</Text>
@@ -84,7 +95,7 @@ export default function RdvMedScreen({ navigation }) {
           <View style={styles.dateContainer}>
             <Text style={styles.dateText}>{item}</Text>
             <TouchableOpacity style={styles.removeButton} onPress={() => removeDate(item)}>
-              <Text style={styles.removeButtonText} >Supprimer</Text>
+              <Text style={styles.removeButtonText}>Supprimer</Text>
             </TouchableOpacity>
             <TextInput
               style={styles.slotInput}
@@ -92,7 +103,7 @@ export default function RdvMedScreen({ navigation }) {
               onChangeText={setSlotInput}
               placeholder="HH:MM AM/PM"
             />
-            <Button title="Ajouter créneau" onPress={() => addSlot(item)} color="#FF1493"/>
+            <Button title="Ajouter créneau" onPress={() => addSlot(item)} color="#FF1493" />
             <FlatList
               data={slots[item]}
               renderItem={({ item: slot, index }) => (
@@ -112,7 +123,7 @@ export default function RdvMedScreen({ navigation }) {
       <TouchableOpacity style={styles.confirmButton} onPress={handleConfirm}>
         <Text style={styles.confirmButtonText}>Confirmer</Text>
       </TouchableOpacity>
-      <Footer style={styles.footer} /> 
+      <Footer style={styles.footer} />
     </View>
   );
 }
@@ -122,6 +133,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(255, 192, 203, 0.5)',
     padding: 20,
+  },
+  mesRendezVous: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FF1493', // Pink color
+    marginBottom: 20,
+    textAlign: 'center',
+    textDecorationLine: 'underline',
   },
   title: {
     fontSize: 25,

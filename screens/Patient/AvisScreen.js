@@ -1,23 +1,21 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Button } from 'react-native';
-import { AntDesign } from '@expo/vector-icons'; // Importer les icônes AntDesign
-import { useNavigation } from '@react-navigation/native';
-import Header from './Header'; // Import the Header component
-import Footer from './Footer'; 
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Button, Alert } from 'react-native';
+import { AntDesign } from '@expo/vector-icons';
+import Header from './Header';
+import Footer from './Footer';
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '../../firebaseConfig';
 
 export default function AvisScreen() {
-  // État local pour gérer les réponses aux questions
   const [answers, setAnswers] = useState({
     question1: '',
     question2: '',
     question3: '',
-    question4: '', // Nouvelle question
+    question4: '',
   });
 
-  // État local pour le commentaire
   const [comment, setComment] = useState('');
 
-  // Fonction pour mettre à jour la réponse à une question
   const updateAnswer = (question, answer) => {
     setAnswers(prevState => ({
       ...prevState,
@@ -25,11 +23,24 @@ export default function AvisScreen() {
     }));
   };
 
+  const addFeedbackToFirestore = async () => {
+    try {
+      const docRef = await addDoc(collection(db, 'feedback'), {
+        ...answers,
+        comment: comment,
+      });
+      console.log('Feedback added with ID: ', docRef.id);
+      Alert.alert('Succès', 'Votre avis a été enregistré avec succès.');
+    } catch (error) {
+      console.error('Error adding feedback: ', error);
+      Alert.alert('Erreur', 'Une erreur s\'est produite lors de l\'enregistrement de votre avis. Veuillez réessayer.');
+    }
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.scrollViewContent}>
       <Header />
       <View style={styles.container}>
-    
         <Text style={styles.title}>Donnez-nous votre avis :</Text>
 
         <View style={styles.card}>
@@ -45,7 +56,6 @@ export default function AvisScreen() {
             </TouchableOpacity>
           </View>
         </View>
-
      
         <View style={styles.card}>
           <Text style={styles.questionText}>Question 2: Êtes-vous satisfait de la facilité d'utilisation ?</Text>
@@ -100,7 +110,6 @@ export default function AvisScreen() {
           <Text>Question 4: {answers.question4}</Text>
         </View>
 
-      
         <View style={styles.commentContainer}>
           <Text style={styles.commentTitle}>Ajouter un commentaire :</Text>
           <TextInput
@@ -112,14 +121,12 @@ export default function AvisScreen() {
           />
         </View>
 
-     
+        {/* Add button */}
         <View style={styles.addButtonContainer}>
-        <Button title="Ajouter" onPress={() => console.log("Ajouter")} color="#FF1493" />
+          <Button title="Ajouter" onPress={addFeedbackToFirestore} color="#FF1493" />
         </View>
-        
-
       </View>
-      <Footer/>
+      <Footer />
     </ScrollView>
   );
 }
@@ -152,35 +159,27 @@ const styles = StyleSheet.create({
   buttonsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    
   },
   button: {
     flexDirection: 'row',
     alignItems: 'center',
-    
-  },
-  answersText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginTop: 20,
   },
   commentContainer: {
     marginBottom: 20,
-    alignItems: 'center', // Center the comment container
+    alignItems: 'center',
   },
   commentTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 10,
     textAlign: 'center',
-    
   },
   commentInput: {
     width: '100%',
     height: 60,
-    backgroundColor: '#fff', // White background
+    backgroundColor: '#fff',
     borderColor: '#ccc',
-    borderWidth:    1,
+    borderWidth: 1,
     borderRadius: 5,
     paddingHorizontal: 10,
     paddingVertical: 5,
@@ -189,7 +188,5 @@ const styles = StyleSheet.create({
   addButtonContainer: {
     marginBottom: 20,
     alignItems: 'center',
-    
   },
 });
-

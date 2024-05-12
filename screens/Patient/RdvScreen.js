@@ -1,89 +1,77 @@
-import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, FlatList } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { db } from '../../firebaseConfig';
+import { collection, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
 import Header from './Header';
-import Footer from './Footer';
-import { db, FIREBASE_AUTH } from '../../firebaseConfig';
-import { collection, getDocs, query, where } from "firebase/firestore";
+import Footer from './Footer'; 
 
-
-export default function RdvScreen({ navigation }) {
-  const [appointments, setAppointments] = useState([])
-  console.log(JSON.stringify(appointments))
-
+export default function ViewAvailableDatesScreen() {
+  const [availableDates, setAvailableDates] = useState([]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
+    const unsubscribe = onSnapshot(collection(db, 'appointments'), (querySnapshot) => {
+      const datesData = [];
+      querySnapshot.forEach((doc) => {
+        const { doctor, dates } = doc.data();
+        dates.forEach((dateObj) => {
+          datesData.push({ doctor, date: dateObj.date, slots: dateObj.slots });
+        });
+      });
+      setAvailableDates(datesData);
+    });
 
-        const appointmentsRef = collection(db, 'appointments');
-        const appointmentsSnapshot = await getDocs(appointmentsRef);
-        const data = appointmentsSnapshot.docs.map((doc) => doc.data());
-        setAppointments(data);
-      } catch (error) {
-        console.log(error)
-      }
-
-    }
-
-    fetchData();
+    // Se désabonner lorsque le composant est démonté
+    return () => unsubscribe();
   }, []);
 
-  const [selectedDoctor, setSelectedDoctor] = useState(null);
-  const [selectedSlot, setSelectedSlot] = useState(null);
+  const renderItem = ({ item }) => (
+    <TouchableOpacity style={styles.dateItem}>
+      <Text style={styles.dateText}>Docteur : {item.doctor}</Text>
+      <Text style={styles.dateText}>Date : {item.date}</Text>
+      <Text style={styles.slotsText}>Créneaux disponibles :</Text>
+      {item.slots.length > 0 ? (
+        item.slots.map((slot, index) => (
+          <TouchableOpacity
+            key={index}
+            style={styles.slotButton}
+            onPress={() => handleSlotPress(item.doctor, item.date, slot)}
+          >
+            <Text style={styles.slotButtonText}>{slot}</Text>
+          </TouchableOpacity>
+        ))
+      ) : (
+        <Text>Aucun créneau disponible</Text>
+      )}
+    </TouchableOpacity>
+  );
 
-  const doctors = [
-    { id: 1, name: 'Dr. John Doe', availableSlots: ['10:00 AM', '02:00 PM', '04:00 PM'] },
-    { id: 2, name: 'Dr. Jane Smith', availableSlots: ['09:00 AM', '11:00 AM', '03:00 PM'] },
-    { id: 3, name: 'Dr. Michael Johnson', availableSlots: ['08:00 AM', '01:00 PM', '05:00 PM'] },
-  ];
+  const handleSlotPress = async (doctor, date, slot) => {
+    try {
+      // Ajouter le rendez-vous sélectionné à la collection "selectedAppointments" dans Firestore
+      const docRef = await addDoc(collection(db, 'selectedAppointments'), {
+        doctor,
+        date,
+        slot,
+        createdAt: serverTimestamp()
+      });
 
-  const handleDoctorPress = (doctor) => {
-    setSelectedDoctor(doctor);
-    setSelectedSlot(null);
-  };
-
-  const handleSlotPress = (slot) => {
-    setSelectedSlot(slot);
+      console.log('Rendez-vous enregistré avec succès:', docRef.id);
+      Alert.alert('Rendez-vous enregistré avec succès!');
+    } catch (error) {
+      console.error('Erreur lors de l\'enregistrement du rendez-vous:', error);
+      Alert.alert('Erreur lors de l\'enregistrement du rendez-vous. Veuillez réessayer plus tard.');
+    }
   };
 
   return (
     <View style={styles.container}>
       <Header />
-      <Text style={styles.title}>Choisissez un médecin :</Text>
+      <Text style={styles.title}>Dates disponibles</Text>
       <FlatList
-        data={doctors}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={[styles.doctorButton, { backgroundColor: selectedDoctor?.id === item.id ? '#FF1493' : '#DDDDDD' }]}
-            onPress={() => handleDoctorPress(item)}
-          >
-            <Text style={styles.doctorButtonText}>{item.name}</Text>
-          </TouchableOpacity>
-        )}
+        data={availableDates}
+        renderItem={renderItem}
+        keyExtractor={(item, index) => index.toString()}
       />
-      {selectedDoctor && (
-        <View style={styles.availabilityContainer}>
-          <Text style={styles.availabilityTitle}>Choisissez un créneau horaire :</Text>
-          <FlatList
-            data={selectedDoctor.availableSlots}
-            keyExtractor={(item) => item}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={[styles.slotButton, { backgroundColor: selectedSlot === item ? '#FF1493' : '#DDDDDD' }]}
-                onPress={() => handleSlotPress(item)}
-              >
-                <Text style={styles.slotButtonText}>{item}</Text>
-              </TouchableOpacity>
-            )}
-          />
-        </View>
-      )}
-      {selectedSlot && (
-        <TouchableOpacity style={styles.confirmButton} onPress={() => alert(`Appointment booked with ${selectedDoctor.name} at ${selectedSlot}`)}>
-          <Text style={styles.confirmButtonText}>Confirmer le rendez-vous</Text>
-        </TouchableOpacity>
-      )}
       <Footer />
     </View>
   );
@@ -92,54 +80,39 @@ export default function RdvScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFC0CB',
-    padding: 20,
+    backgroundColor: 'rgba(255, 192, 203, 0.5)',
+    justifyContent: 'center',
   },
   title: {
-    fontSize: 20,
+    fontSize: 25,
     fontWeight: 'bold',
     marginBottom: 20,
-    color: '#fff',
+    color: '#FF1493', 
+    textAlign: 'center',
   },
-  doctorButton: {
-    backgroundColor: '#DDDDDD',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-    marginBottom: 10,
+  dateItem: {
+    marginBottom: 20,
+    alignItems: 'center',
   },
-  doctorButtonText: {
-    fontSize: 16,
-  },
-  availabilityContainer: {
-    marginTop: 20,
-  },
-  availabilityTitle: {
-    fontSize: 18,
+  dateText: {
+    fontSize: 16, 
     fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#fff',
+  },
+  slotsText: {
+    fontSize: 14,
+    marginTop: 5,
+    fontWeight: 'bold',
   },
   slotButton: {
-    backgroundColor: '#DDDDDD',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    backgroundColor: '#FF1493',
+    paddingVertical: 6,
+    paddingHorizontal: 150,
     borderRadius: 5,
-    marginBottom: 10,
+    marginTop: 5,
   },
   slotButtonText: {
-    fontSize: 16,
-  },
-  confirmButton: {
-    backgroundColor: '#FF1493',
-    paddingVertical: 15,
-    borderRadius: 5,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  confirmButtonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 12,
     color: '#fff',
+    textAlign: 'center',
   },
 });

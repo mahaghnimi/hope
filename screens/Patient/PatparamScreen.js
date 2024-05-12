@@ -1,42 +1,63 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { auth } from '../../firebaseConfig'; // Import Firebase Authentication
+import { db, FIREBASE_AUTH } from '../../firebaseConfig';
 import Header from './Header';
 import Footer from './Footer';
 
 export default function PatparamScreen() {
+  const [email, setEmail] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [displayName, setDisplayName] = useState(''); // State to hold user's display name
+  const auth = FIREBASE_AUTH;
+  
+  useEffect(() => {
+    const user = auth.currentUser;
+    if (user) {
+      setEmail(user.email);
+      setDisplayName(user.displayName); // Set display name
+    }
+  }, []);
 
-  const handleChangePassword = () => {
-    // Check if new password and confirm new password match
+  const handleChangePassword = async () => {
     if (newPassword !== confirmNewPassword) {
       Alert.alert('Erreur', 'Le nouveau mot de passe et la confirmation du nouveau mot de passe ne correspondent pas');
       return;
     }
 
-    // Perform API request to change password with currentPassword and newPassword
-
-    // For demonstration purposes, just logging the values
-    console.log('Mot de passe actuel:', currentPassword);
-    console.log('Nouveau Mot de Passe:', newPassword);
-    console.log('Confirmer Nouveau Mot de Passe:', confirmNewPassword);
-
-    // Clear input fields
-    setCurrentPassword('');
-    setNewPassword('');
-    setConfirmNewPassword('');
-
-    // Show success message
-    Alert.alert('Succès', 'Le mot de passe a été réinitialisé avec succès');
+    try {
+      const user = auth.currentUser;
+      // Ensure the user is signed in with email and password provider
+      if (user && user.providerData.some(provider => provider.providerId === 'password')) {
+        await user.updatePassword(newPassword);
+        Alert.alert('Succès', 'Le mot de passe a été réinitialisé avec succès');
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmNewPassword('');
+      } else {
+        Alert.alert('Erreur', 'Votre compte n\'est pas associé à un fournisseur de connexion par e-mail et mot de passe.');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du mot de passe :', error.message);
+      Alert.alert('Erreur', 'Une erreur s\'est produite lors de la mise à jour du mot de passe. Veuillez réessayer.');
+    }
   };
 
   return (
     <View style={styles.container}>
-       <Header />
+      <Header />
       <Text style={styles.title}>Changer votre Mot de passe</Text>
-  
+
       <View style={styles.content}>
+        <Text style={styles.displayName}>{displayName}</Text> 
+        <TextInput
+          style={styles.input}
+          placeholder="Adresse e-mail"
+          value={email}
+          editable={false} // Make it non-editable as it's pre-filled
+        />
         <TextInput
           style={styles.input}
           placeholder="Mot de passe actuel"
@@ -84,6 +105,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  displayName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#FF1493',
   },
   input: {
     width: '80%',

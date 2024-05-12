@@ -17,8 +17,7 @@ export default function CreatecompteScreen({ navigation }) {
   const auth = FIREBASE_AUTH
 
   
-  
-  
+
   const signUp = async () => {
     let userRole = '';
     if (isDoctor) {
@@ -49,45 +48,8 @@ export default function CreatecompteScreen({ navigation }) {
     }
   }
 
-  const handleConfirmation = () => {
-    if (!isValidName(Name)) {
-      Alert.alert('Erreur', 'Le nom et prénom doivent commencer par une majuscule');
-      return;
-    }
 
-    if (!isValidPhoneNumber(phoneNumber)) {
-      Alert.alert('Erreur', 'Le numéro de téléphone doit être numérique et contenir au moins 8 chiffres');
-      return;
-    }
 
-    if (!isValidEmail(email)) {
-      Alert.alert('Erreur', 'L\'adresse e-mail est invalide');
-      return;
-    }
-
-    if (!isValidPassword(password)) {
-      Alert.alert('Erreur', 'Le mot de passe doit contenir au moins 8 caractères avec des lettres et des chiffres');
-      return;
-    }
-
-    navigation.navigate('ConfirmationScreen');
-  };
-
-  const isValidName = (name) => {
-    return /^[A-Z][a-z]* [A-Z][a-z]*$/.test(name);
-  };
-
-  const isValidPhoneNumber = (phoneNumber) => {
-    return /^\d{8,}$/.test(phoneNumber);
-  };
-
-  const isValidEmail = (email) => {
-    return /\S+@\S+\.\S+/.test(email);
-  };
-
-  const isValidPassword = (password) => {
-    return /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/.test(password);
-  };
 
   const goBack = () => {
     navigation.goBack();
@@ -102,19 +64,7 @@ export default function CreatecompteScreen({ navigation }) {
       <ImageBackground source={require('../../assets/images/confirm.png')} style={styles.background}>
         <View style={styles.container}>
           <View style={styles.card}>
-            {/* <TextInput
-              style={styles.input}
-              placeholder="Saisir votre nom et prénom"
-              onChangeText={text => setName(text)}
-              value={Name}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Saisir votre Télephone"
-              onChangeText={text => setPhoneNumber(text)}
-              value={phoneNumber}
-              keyboardType="phone-pad"
-            /> */}
+      
             <TextInput
               style={styles.input}
               placeholder="Saisir votre adresse email"

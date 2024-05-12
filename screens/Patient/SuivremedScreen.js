@@ -2,40 +2,60 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Header from './Header';
 import Footer from './Footer';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { db } from '../../firebaseConfig';
 
 export default function SuiviPatientScreen({ navigation }) {
-  const [suivis, setSuivis] = useState([]);
+  const [medications, setMedications] = useState([]);
+  const [doctorName, setDoctorName] = useState('');
 
   useEffect(() => {
-    // Simuler la récupération des suivis depuis une API ou une base de données
-    const suivisFromAPI = [
-      { id: 1, medication: 'Aspirin', totalPills: 30, quantityPerDay: 1 },
-      { id: 2, medication: 'Paracetamol', totalPills: 20, quantityPerDay: 2 },
-      { id: 3, medication: 'Ibuprofen', totalPills: 15, quantityPerDay: 3 },
-      { id: 3, medication: 'Ibuprofen', totalPills: 15, quantityPerDay: 3 },
-      { id: 3, medication: 'Ibuprofen', totalPills: 15, quantityPerDay: 3 },
-      // Ajoutez d'autres médicaments si nécessaire
+    const unsubscribe = onSnapshot(collection(db, 'medications'), (snapshot) => {
+      const medicationsData = [];
+      snapshot.forEach((doc) => {
+        medicationsData.push({ id: doc.id, ...doc.data() });
+      });
+      setMedications(medicationsData);
+    });
 
-    ];
-    setSuivis(suivisFromAPI);
+    const fetchDoctorName = async () => {
+      try {
+        const user = firebase.auth().currentUser;
+        if (user) {
+          const doctorEmail = user.email;
+          const doctorQuery = query(collection(db, 'doctors'), where('email', '==', doctorEmail));
+          const querySnapshot = await getDocs(doctorQuery);
+          querySnapshot.forEach((doc) => {
+            setDoctorName(doc.data().name);
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching doctor name:', error);
+      }
+    };
+
+    fetchDoctorName();
+
+    return () => unsubscribe();
   }, []);
 
   return (
     <View style={styles.container}>
       <Header />
       <View style={styles.content}>
-        <Text style={styles.title}>Suivi des médicaments</Text>
+        <Text style={styles.title}>{doctorName}</Text>
+        <Text style={styles.subtitle}>Suivi des médicaments</Text>
         <View style={styles.table}>
           <View style={styles.tableRow}>
             <Text style={styles.headerCell}>Médicament</Text>
             <Text style={styles.headerCell}>Total de pilules</Text>
             <Text style={styles.headerCell}>Quantité par jour</Text>
           </View>
-          {suivis.map((suivi) => (
-            <View key={suivi.id} style={styles.tableRow}>
-              <Text style={styles.tableCell}>{suivi.medication}</Text>
-              <Text style={styles.tableCell}>{suivi.totalPills}</Text>
-              <Text style={styles.tableCell}>{suivi.quantityPerDay}</Text>
+          {medications.map((medication) => (
+            <View key={medication.id} style={styles.tableRow}>
+              <Text style={styles.tableCell}>{medication.medicationName}</Text>
+              <Text style={styles.tableCell}>{medication.totalPills}</Text>
+              <Text style={styles.tableCell}>{medication.quantityPerDay}</Text>
             </View>
           ))}
         </View>
@@ -59,6 +79,12 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 25,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#FF1493',
+  },
+  subtitle: {
+    fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 20,
     color: '#FF1493',
@@ -90,5 +116,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 5,
     textAlign: 'center',
+    backgroundColor: 'rgba(255, 192, 203, 0.8)',
+    color: '#FF1493',
   },
 });

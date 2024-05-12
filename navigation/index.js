@@ -3,9 +3,9 @@ import { View,Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import CompteScreen from '../screens/Patient/CompteScreen';
-import CreatecompteScreen from '../screens/Patient/CreatecompteScreen';
-import ConfirmationScreen from '../screens/Patient/ConfirmationScreen';
-import AthentifScreen from '../screens/Doctor/AthentifScreen';
+import CreatecompteScreen from '../screens/Auth/CreatecompteScreen';
+
+import AthentifScreen from '../screens/Auth/AthentifScreen';
 
 import RdvScreen from '../screens/Patient/RdvScreen';
 import PagerdvScreen from '../screens/Patient/PagerdvScreen';
@@ -56,6 +56,8 @@ import DocparamScreen from '../screens/Doctor/DocparamScreen';
 import PatparamScreen from '../screens/Patient/PatparamScreen';
 import ModifdossierScreen from '../screens/Patient/ModifdossierScreen';
 import MedchatScreen from '../screens/Doctor/MedchatScreen';
+import ProfileDetailScreen from '../screens/Doctor/ProfileDetailScreen';
+import DispoScreen from '../screens/Doctor/DispoScreen';
 
 
 const Stack = createStackNavigator();
@@ -69,7 +71,7 @@ const Navigation = () =>{
             <Stack.Screen name="CompteScreen" component={CompteScreen}/>
             <Stack.Screen name="AthentifScreen" component={AthentifScreen}/>
             <Stack.Screen name="CreatecompteScreen" component={CreatecompteScreen}/>
-            <Stack.Screen name="ConfirmationScreen" component={ConfirmationScreen}/>
+    
             <Stack.Screen name="PagerdvScreen" component={PagerdvScreen}/>
             <Stack.Screen name="RdvScreen" component={RdvScreen}/>
             <Stack.Screen name="GpsScreen" component={GpsScreen}/>
@@ -119,6 +121,8 @@ const Navigation = () =>{
             <Stack.Screen name="PatparamScreen" component={PatparamScreen}/>
             <Stack.Screen name="ModifdossierScreen" component={ModifdossierScreen}/>
             <Stack.Screen name="MedchatScreen" component={MedchatScreen}/>
+            <Stack.Screen name="ProfileDetailScreen" component={ProfileDetailScreen}/>
+            <Stack.Screen name="DispoScreen" component={DispoScreen}/>
             </Stack.Navigator>
         </NavigationContainer>
     )

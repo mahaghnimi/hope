@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { collection, getDocs, where, query } from "firebase/firestore";
+import { db, FIREBASE_AUTH } from '../../firebaseConfig';
 import Header from './Header';
 import Footer from './Footer';
 
@@ -9,15 +11,13 @@ export default function DocparamScreen() {
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
 
   const handleChangePassword = () => {
-    // Check if new password and confirm new password match
+  
     if (newPassword !== confirmNewPassword) {
       Alert.alert('Erreur', 'Le nouveau mot de passe et la confirmation du nouveau mot de passe ne correspondent pas');
       return;
     }
 
-    // Perform API request to change password with currentPassword and newPassword
-
-    // For demonstration purposes, just logging the values
+  
     console.log('Mot de passe actuel:', currentPassword);
     console.log('Nouveau Mot de Passe:', newPassword);
     console.log('Confirmer Nouveau Mot de Passe:', confirmNewPassword);

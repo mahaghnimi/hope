@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Image, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, TextInput, Button, Image, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { useNavigation } from '@react-navigation/native';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../../firebaseConfig';
 import Header from './Header'; 
 import Footer from './Footer';
 
 export default function MedProfilScreen() {
+  const navigation = useNavigation();
   const [image, setImage] = useState(null);
   const [nom, setNom] = useState('');
   const [prenom, setPrenom] = useState('');
@@ -24,6 +28,38 @@ export default function MedProfilScreen() {
 
     if (!result.cancelled) {
       setImage(result.uri);
+    }
+  };
+
+  const handleEnregistrer = async () => {
+    try {
+      await addDoc(collection(db, 'medical_professionals'), {
+        nom,
+        prenom,
+        dateNaissance,
+        specialite,
+        competences,
+        educationHistory,
+        numTelephone,
+        imageUri: image,
+        createdAt: serverTimestamp()
+      });
+
+      console.log('Profil enregistré avec succès');
+      Alert.alert('Profil enregistré avec succès!');
+      
+      navigation.navigate('ProfileDetailScreen', {
+        nom,
+        prenom,
+        dateNaissance,
+        specialite,
+        competences,
+        educationHistory,
+        numTelephone
+      });
+    } catch (error) {
+      console.error('Erreur lors de l\'enregistrement du profil:', error);
+      Alert.alert('Erreur lors de l\'enregistrement du profil. Veuillez réessayer plus tard.');
     }
   };
 
@@ -83,7 +119,7 @@ export default function MedProfilScreen() {
           />
         </View>
         <View style={styles.buttonContainer}>
-          <Button title="Enregistrer" onPress={() => console.log('Profil enregistré')} color="#FF1493" /> 
+          <Button title="Enregistrer" onPress={handleEnregistrer} color="#FF1493" /> 
         </View>
       </ScrollView>
       <Footer />
@@ -104,7 +140,7 @@ const styles = StyleSheet.create({
   input: {
     height: 40,
     width: '100%',
-    backgroundColor: '#FFC0CB', // Couleur de fond de l'input
+    backgroundColor: '#FFC0CB',
     borderColor: '#FF1493',
     borderWidth: 1,
     borderRadius: 5,

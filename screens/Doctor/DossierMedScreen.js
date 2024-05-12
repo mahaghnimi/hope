@@ -1,90 +1,93 @@
-import React, { useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { collection, onSnapshot, query} from 'firebase/firestore';
+import { db } from '../../firebaseConfig';
 import Header from './Header';
 import Footer from './Footer';
 
-const themeColor = '#FFC0CB';
+export default function DossierMedScreen() {
+  const [patientData, setPatientData] = useState([]);
+  const navigation = useNavigation();
 
-const DossierMedical = ({ dossier, onPress }) => (
-  <TouchableOpacity onPress={onPress}>
-    <View style={styles.dossierCard}>
-      <Text style={styles.dossierText}>{dossier.nomPatient}</Text>
-    </View>
-  </TouchableOpacity>
-);
+  useEffect(() => {
+    const unsubscribe = onSnapshot(query(collection(db, 'symptoms')), (snapshot) => {
+      const data = [];
+      snapshot.forEach((doc) => {
+        data.push({ id: doc.id, ...doc.data() });
+      });
+      setPatientData(data);
+    });
 
-const DossiersMedicauxListe = ({ dossiersMedicaux, onPressDossier }) => {
-  return (
-    <View style={styles.container}>
-      <FlatList
-        data={dossiersMedicaux}
-        renderItem={({ item }) => (
-          <DossierMedical
-            dossier={item}
-            onPress={() => onPressDossier(item)}
-          />
-        )}
-        keyExtractor={(item) => item.id.toString()}
-      />
-    </View>
-  );
-};
+    // Cleanup function
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: 'rgba(255, 192, 203, 0.5)',
-    paddingHorizontal: 10,
-    paddingTop: 10,
-  },
-  dossierCard: {
-    backgroundColor: '#fff',
-    padding: 20,
-    marginBottom: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#FF1493',
-  },
-  dossierText: {
-    color: '#333',
-    fontWeight: 'bold',
-    fontSize: 17,
-    textAlign: 'center',
-    color: '#FF1493',
-  },
-});
-
-const DossierMedScreen = () => {
-  const [selectedDossier, setSelectedDossier] = useState(null);
-  const navigation = useNavigation(); 
-
-  const handleDossierPress = (dossier) => {
-    setSelectedDossier(dossier);
-    navigation.navigate('MedDossierScreen', { dossier });
+  const handleViewDetail = (patientId) => {
+    navigation.navigate('MedDossierScreen', { patientId });
   };
-
-  const dossiersMedicaux = [
-    { id: 1, nomPatient: 'Jean Dupont' },
-    { id: 2, nomPatient: 'Marie Martin' },
-    { id: 3, nomPatient: 'Pauline Durand' },
-  ];
 
   return (
     <View style={{ flex: 1 }}>
       <Header />
-      <DossiersMedicauxListe
-        dossiersMedicaux={dossiersMedicaux}
-        onPressDossier={handleDossierPress}
-      />
-      {selectedDossier && (
-        <View style={{ padding: 20 }}>
-          <Text style={{ color: '#FF1493' }}>Dossier sélectionné : {selectedDossier.nomPatient}</Text>
-        </View>
-      )}
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.headerText}>Liste des dossiers médicaux</Text>
+        {patientData.map(patient => (
+          <TouchableOpacity
+            key={patient.id}
+            style={styles.patientCard}
+            onPress={() => handleViewDetail(patient.id)}
+          >
+            <Text style={styles.patientName}>Nom du patient: {patient.patientName}</Text>
+            <Text style={styles.email}>Email: {patient.email}</Text>
+            {patient.symptoms && (
+              <Text style={styles.symptoms}>Symptômes: {patient.symptoms.join(', ')}</Text>
+            )}
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
       <Footer />
     </View>
   );
-};
+}
 
-export default DossierMedScreen;
+const styles = StyleSheet.create({
+  container: {
+    flexGrow: 1,
+    backgroundColor: 'rgba(255, 192, 203, 0.5)',
+    paddingVertical: 20,
+    paddingHorizontal: 10,
+  },
+  headerText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+    color: '#880088',
+  },
+  patientCard: {
+    backgroundColor: '#f9f9f9',
+    padding: 15,
+    marginBottom: 10,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#FF1493',
+  },
+  patientName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5,
+    color: '#FF1493',
+  },
+  email: {
+    fontSize: 14,
+    color: '#FF1493',
+    fontWeight: 'bold',
+  },
+  symptoms: {
+    fontSize: 14,
+    color: '#666',
+  },
+});
